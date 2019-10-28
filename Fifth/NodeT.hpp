@@ -30,4 +30,3 @@ public:
 
 
 #endif /* NodeT_HPP_ */
-

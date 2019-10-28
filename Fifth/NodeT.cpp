@@ -6,6 +6,7 @@
  */
 
 
+
 #include "NodeT.hpp"
 #include <iostream>
 #include <string>
@@ -30,7 +31,4 @@ NodeT::~NodeT() {
 void NodeT::printNode() {
 	cout << "|"<<data << ", "<< height <<"|" << endl;
 }
-
-
-
 
