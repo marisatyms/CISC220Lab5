@@ -32,29 +32,36 @@ bool BSTY::insertit(string x) {
 		root = n;
 		return true;
 	}
-	else if (root->data == x) {
-		return false;
-	}
 	else {
 		NodeT* tmp = root;
 		while (tmp != NULL) {
 			if (x > tmp->data) {
+				if (tmp->right == NULL) {
+					tmp->right = new NodeT(x);
+					tmp->right->parent = tmp;
+					adjustHeights(tmp->right);
+					return true;
+			}
+			else {
 				tmp = tmp->right;
 			}
-			if (x<tmp->data) {
+		}
+		else if (x < tmp->data) {
+				if (tmp->left == NULL) {
+					tmp->left = new NodeT(x);
+					tmp->left->parent = tmp;
+					adjustHeights(tmp->left);
+					return true;
+			}
+			else {
 				tmp = tmp->left;
 			}
+}
+		else {
+			return false;
 		}
-		tmp = n;
-		n->parent = tmp->parent;
-		if (tmp->data > x) {
-			tmp->right = n;
-		}
-		if (tmp->data < x) {
-			tmp->left = n;
-		}
-		return true;
 	}
+}
 }
 
 // the adjustHeights method updates the heights of every ancestor of the node n.
@@ -70,26 +77,36 @@ bool BSTY::insertit(string x) {
 // the loop has worked its way up to the root, or until the currently being checked
 // ancestor is not changed.
 void BSTY::adjustHeights(NodeT *n) {
-	NodeT* tmp = n->parent;
-	int h;
-	while (true) {
-		if (tmp->right->height > tmp->left->height) {
-			h = tmp->right->height;
-		}
-		if (tmp->right->height < tmp->left->height) {
-			h = tmp->left->height;
-		}
-		if (h == tmp->height) {
-			tmp->height += 1;
-		}
-		if (tmp->height > h+1) {
-			tmp->height -= 1;
-		}
-		if (tmp->parent->height > tmp->height) {
-			break;
-		}
-		tmp = tmp->parent;
+	NodeT *tmp=n->parent;
+	int height;
+	int right = 0;
+	int left= 0;
+	if(tmp==NULL) {
+		return;
 	}
+	if(tmp->right != NULL){
+		right=tmp->right->height;
+	}
+	if(tmp->left!=NULL){
+		left=tmp->left->height;
+	}
+
+	if(right>=left ||tmp->left==NULL){
+		height=right;
+	}
+	if(left>right || tmp->right==NULL){
+		height=left;
+	}
+	if (findBalance(n) > 2) {
+		rotateRight(n);
+	}
+	if (findBalance(n) < -2) {
+		rotateLeft(n);
+	}
+
+	tmp->height=height+1;
+	return adjustHeights(tmp);
+
 }
 
 void BSTY::printTreeIO() {
@@ -105,6 +122,14 @@ void BSTY::printTreeIO() {
 // Use the slides, but make sure you can understand how the tree is
 // traversed in order
 void BSTY::printTreeIO(NodeT *n) {
+	if (n == NULL) {
+		return;
+	}
+	else {
+		printTreeIO(n->left);
+		n->printNode();
+		printTreeIO(n->right);
+	}
 }
 
 void BSTY::printTreePre() {
@@ -120,7 +145,14 @@ void BSTY::printTreePre() {
 // child.  Use the slides, but make sure you understand how a tree is traversed in
 // pre-order
 void BSTY::printTreePre(NodeT *n) {
-
+	if (n == NULL) {
+		return;
+	}
+	else {
+		n->printNode();
+		printTreeIO(n->left);
+		printTreeIO(n->right);
+	}
 }
 
 void BSTY::printTreePost() {
@@ -137,8 +169,16 @@ void BSTY::printTreePost() {
 // Use the slides, but make sure you understand how a tree is traversed in
 // post-order
 void BSTY::printTreePost(NodeT *n) {
-
+	if (n == NULL) {
+		return;
+	}
+	else {
+		printTreeIO(n->left);
+		printTreeIO(n->right);
+		n->printNode();
+	}
 }
+
 void BSTY::myPrint() {
 	if (root == NULL ) {
 		cout << "Empty Tree" << endl;
@@ -169,9 +209,55 @@ void BSTY::myPrint(NodeT *n) {
 // NOTE: If the node can't be found, this method prints out that x can't be found.
 // if it is found, the printNode method is called for the node.
 NodeT *BSTY::find(string x) {
-
+	NodeT* tmp = root;
+	bool h = true;
+	while (h) {
+		if (tmp == NULL) {
+			h = false;
+		}
+		else if (tmp->data == x) {
+			h = false;
+		}
+		else if (x > tmp->data) {
+			tmp = tmp->right;
+		}
+		else if (x < tmp->data) {
+			tmp = tmp->left;
+		}
+	}
+	if (tmp == NULL) {
+		cout<<"Node cannot be found"<<endl;
+	}
+	else {
+		tmp->printNode();
+	}
+	return tmp;
 }
 
+NodeT* BSTY::rotateRight(NodeT *n) {
+	NodeT* tmp = n->right;
+	n->left = n;
+	n = n->right;
+	n->right = tmp->left;
+	adjustHeights(n);
+	return tmp;
+}
+
+NodeT* BSTY::rotateLeft(NodeT *n) {
+	NodeT* tmp = n->left;
+	n->right = n;
+	n = n->left;
+	tmp->right = n->left;
+	adjustHeights(n);
+	return tmp;
+}
+
+int BSTY::findBalance(NodeT *n) {
+	if (n == NULL) {
+		return 0;
+	}
+	return n->left->height - n->right->height;
+}
 /*************************************************************************************/
 /* Extra Credit Methods                                                              */
 /* Challenging: worth 35 EC pts to go towards labs                                   */
@@ -204,7 +290,35 @@ NodeT *BSTY::find(string x) {
 /* true if the removal was successful.
 */
 bool BSTY::remove(string s) {
-
+		if (find(s)->right == NULL && find(s)->left == NULL) {
+			remove1(find(s));
+			NodeT* x = find(s)->parent;
+			adjustHeights(x);
+			delete find(s);
+			return true;
+		}
+		else if (find(s)->right == NULL && find(s)->left != NULL) {
+			remove2(find(s));
+			NodeT* x = find(s)->parent;
+			adjustHeights(x);
+			delete find(s);
+			return true;
+		}
+		else if (find(s)->left == NULL && find(s)->right != NULL) {
+			remove2(find(s));
+			NodeT* x = find(s)->parent;
+			adjustHeights(x);
+			delete find(s);
+			return true;
+	}
+		else {
+			remove3(find(s));
+			NodeT* x = find(s)->parent;
+			adjustHeights(x);
+			delete find(s);
+			return true;
+		}
+		return false;
 }
 
 /* remove1(): called when the node to be removed has no children. Takes as input the
@@ -213,7 +327,16 @@ bool BSTY::remove(string s) {
 /* Make sure you check to whether n is the root or not.
 */
 void BSTY::remove1(NodeT *n) {
-
+	if (n == root) {
+		root= NULL;
+	}
+	if (n->parent->left == n) {
+		n->parent->left = NULL;
+}
+	if (n->parent->right == n){
+	n->parent->right = NULL;
+	}
+	n->parent = NULL;
 }
 
 /* remove2(): called when the node to be removed has 1 child only.  Takes as input
@@ -226,7 +349,30 @@ void BSTY::remove1(NodeT *n) {
 /* one child becomes the root.
 */
 void BSTY::remove2(NodeT *n) {
+	NodeT* tmp;
+	if (n->left == NULL && n->parent == root) {
+		tmp = n->right;
+		root->right = tmp;
+		tmp->parent = root;
+		delete n;
+	}
+	if (n->right == NULL && n->parent == root) {
+		tmp = n->left;
+		root->left = tmp;
+		tmp->parent = root;
+		delete n;
+	}
+	if (n->parent->left == n) {
+		tmp->parent = n->parent;
+		n->parent->left = tmp;
+		delete n;
+	}
+	if (n->parent->right == n) {
+		tmp->parent = n->parent;
+		n->parent->right = tmp;
+		delete n;
 
+}
 }
 
 /* remove3(): called when the node to be removed has 2 children.  Takes as input the
@@ -243,14 +389,41 @@ void BSTY::remove2(NodeT *n) {
 /* Remember to take into account that the node being removed might be the root.
 */
 void BSTY::remove3(NodeT *n) {
-
+	NodeT* tmp = n->right;
+	NodeT* tmp2 = n->left;
+	NodeT* tmp3 = tmp;
+	while (tmp3->left != NULL) {
+		tmp3 = tmp3->left;
+	}
+	if (tmp3->right == NULL && tmp3->left == NULL) {
+		remove1(tmp3);
+		tmp3->parent = n->parent;
+		tmp3->right = tmp;
+		tmp3->left = tmp2;
+		tmp->parent = tmp3;
+		tmp2->parent = tmp3;
+	}
+	if (tmp3->right == NULL && tmp3->left == NULL) {
+			remove2(tmp3);
+			tmp3->parent = n->parent;
+			tmp3->right = tmp;
+			tmp3->left = tmp2;
+			tmp->parent = tmp3;
+			tmp2->parent = tmp3;
+		}
 }
 
 /* findMin(): takes as input a node, and finds the left-most descendant of its
 /* right child.  The left-most descendent is returned.
 */
 NodeT *BSTY::findMin(NodeT *n) {
-
+	NodeT* tmp = root;
+	while (tmp!= NULL) {
+		if (tmp->right->left != NULL) {
+			tmp = tmp->right->left;
+		}
+	}
+	return tmp;
 }
 
 void BSTY::myPrintEC() {
@@ -274,7 +447,9 @@ void BSTY::myPrintEC(NodeT *n) {
 }
 
 
+
 /************************************************************************/
+
 
 
 

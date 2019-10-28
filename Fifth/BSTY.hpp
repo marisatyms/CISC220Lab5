@@ -28,6 +28,9 @@ public:
 	void myPrint();
 	void myPrint(NodeT *n);
 	NodeT *find(string x);
+	NodeT* rotateRight(NodeT *n);
+	NodeT* rotateLeft(NodeT *n);
+	int findBalance(NodeT *n);
 
 // For Extra Credit
 	void myPrintEC();
