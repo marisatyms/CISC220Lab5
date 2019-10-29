@@ -8,7 +8,7 @@
 
 #include <iostream>
 #include "BSTY.hpp"
-#include "Game.hpp"
+#include "game.hpp"
 #include "LL.hpp"
 #include <stdlib.h>
 #include <string>
