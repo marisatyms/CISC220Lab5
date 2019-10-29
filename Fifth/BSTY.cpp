@@ -98,10 +98,10 @@ void BSTY::adjustHeights(NodeT *n) {
 		height=left;
 	}
 	if (findBalance(n) > 2) {
-		rotateRight(n);
+		rotateLeft(n);
 	}
 	if (findBalance(n) < -2) {
-		rotateLeft(n);
+		rotateRight(n);
 	}
 
 	tmp->height=height+1;
@@ -235,25 +235,53 @@ NodeT *BSTY::find(string x) {
 }
 
 NodeT* BSTY::rotateRight(NodeT *n) {
-	NodeT* tmp = n->right;
-	n->left = n;
-	n = n->right;
-	n->right = tmp->left;
+	NodeT* tmp = n->left;
+	if (n == root) {
+	tmp->right->parent = n;
+	n->left = tmp->right;
+	n->parent = tmp;
+	tmp->right = n;
 	adjustHeights(n);
 	return tmp;
 }
+	else
+		tmp->right->parent = n;
+			n->left = tmp->right;
+			tmp->parent = n->parent;
+			n->parent = tmp;
+			tmp->right = n;
+			adjustHeights(n);
+			return tmp;
+}
 
 NodeT* BSTY::rotateLeft(NodeT *n) {
-	NodeT* tmp = n->left;
-	n->right = n;
-	n = n->left;
-	tmp->right = n->left;
+	NodeT* tmp = n->right;
+	if (n == root) {
+	tmp->left->parent = n;
+	n->right = tmp->left;
+	n->parent = tmp;
+	tmp->left = n;
 	adjustHeights(n);
 	return tmp;
+}
+	else
+		tmp->left->parent = n;
+			n->right = tmp->left;
+			tmp->parent = n->parent;
+			n->parent = tmp;
+			tmp->left = n;
+			adjustHeights(n);
+			return tmp;
 }
 
 int BSTY::findBalance(NodeT *n) {
 	if (n == NULL) {
+		return 0;
+	}
+	else if (n->right == NULL) {
+		return 0;
+	}
+	else if (n->left == NULL) {
 		return 0;
 	}
 	return n->left->height - n->right->height;
