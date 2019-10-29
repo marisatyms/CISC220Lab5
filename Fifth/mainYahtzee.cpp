@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <fstream>
-#include "Game.hpp"
+#include "game.hpp"
 #include "TreePuzzle.hpp"
 
 using namespace std;
